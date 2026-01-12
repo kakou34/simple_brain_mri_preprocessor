@@ -13,6 +13,10 @@ def run_ants_registration(fixed_path, fixed_mask_path, moving_path, moving_mask_
     fixed_mask = ants.image_read(fixed_mask_path)
     moving_mask = ants.image_read(moving_mask_path)
 
+    moving_img = ants.iMath(moving_img, "Normalize")
+
+    fixed_img = ants.iMath(fixed_img, "Normalize")
+
     # 2. Perform Registration
     # 'QuickRigid' or 'TRNA' (Translation, Rigid, Native, Affine) are good for MNI
     print(f"Running ANTs registration for {os.path.basename(moving_path)}...")
