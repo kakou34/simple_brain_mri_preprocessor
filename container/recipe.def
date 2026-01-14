@@ -1,0 +1,36 @@
+Bootstrap: docker
+From: pytorch/pytorch:2.0.1-cuda11.7-cudnn8-runtime
+
+%setup
+# This copies your current local directory (the repo) into the container's temporary filesystem
+# It ensures src/ and main.py are included in the build
+cp -r . ${APPTAINER_ROOTFS}/opt/mri_tool
+
+%post
+export DEBIAN_FRONTEND=noninteractive
+
+apt-get update
+apt-get install -y python3-pip git wget bc dc libgl1-mesa-glx libglu1-mesa libxt6 libx11-6 libquadmath0 libgomp1 cmake g++
+
+wget https://fsl.fmrib.ox.ac.uk/fsldownloads/fslinstaller.py
+/opt/conda/bin/python fslinstaller.py -d /opt/fsl --no_checksum -q
+
+/opt/conda/bin/python -m pip install --upgrade pip
+/opt/conda/bin/python -m pip install --no-cache-dir nibabel numpy antspyx
+/opt/conda/bin/python -m pip install --no-cache-dir git+https://github.com/MIC-DKFZ/HD-BET.git
+
+chmod -R 755 /opt/mri_tool
+
+%environment
+# FSL Environment
+export FSLDIR=/opt/fsl
+export PATH=$FSLDIR/bin:/opt/conda/bin:$PATH
+export FSLOUTPUTTYPE=NIFTI_GZ
+export LD_LIBRARY_PATH=$FSLDIR/lib:$LD_LIBRARY_PATH
+export PYTHONPATH=/opt/mri_tool:$PYTHONPATH
+
+
+%runscript
+# This is the command that runs by default when you call 'apptainer run'
+# It points to the INTERNAL code location
+exec /opt/conda/bin/python /opt/mri_tool/main.py "$@"

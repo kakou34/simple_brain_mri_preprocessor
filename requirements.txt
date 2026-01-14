@@ -1,0 +1,13 @@
+# --- Core Imaging Libraries ---
+antspyx
+nibabel>=5.1.0
+numpy>=1.24.0
+
+# --- Deep Learning Backend (Required for HD-BET) ---
+# Note: On HPC, it is often better to install torch separately 
+# to match your specific CUDA version.
+torch>=2.0.0
+
+# --- Brain Extraction ---
+# This pulls the latest version directly from the official repository
+git+https://github.com/MIC-DKFZ/HD-BET.git
