@@ -86,15 +86,16 @@ apptainer build mri_preproc.sif container/recipe.def
 
 ### Run the container
 ```
-apptainer run mri_preproc.sif \
-  --input /data/raw_t1s \
-  --output /data/preprocessed \
-  --atlas /data/MNI152_T1_1mm.nii.gz \
-  --atlas_mask /data/MNI152_T1_1mm_brain_mask.nii.gz \
-  --reg_tool FSL \
-  --use_mask \
-  --cleanup \
-  --device cuda
+apptainer run --nv \
+    --bind /path/to/data/folder:/mnt/data \
+    --bind /path/to/atlas:/atlas \
+    brain_preproc.sif \
+        --input /mnt/data/T1 \
+        --output /mnt/data/Preprocessed \
+        --atlas /atlas/mni_icbm152_t1_tal_nlin_sym_09a.nii.gz \
+        --atlas_mask /atlas/mni_icbm152_t1_tal_nlin_sym_09a_mask.nii.gz \
+        --reg_tool FSL \
+        --device cuda
 ```
 
 # Final Remarks 
