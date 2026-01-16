@@ -93,6 +93,9 @@ apptainer run --nv \
         --reg_tool FSL \
         --device cuda
 ```
+### Public image
+A built image is provided on Github Container Registry under: `ghcr.io/kakou34/sbmp-bigr:v2.0`
+
 
 # Final Remarks 
 - This repository represents a stable working release of a brain preprocessing pipeline.
