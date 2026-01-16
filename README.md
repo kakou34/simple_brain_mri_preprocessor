@@ -7,9 +7,7 @@ The preprocessing consists of the following steps:
 
 1. **Brain extraction** using **HD-BET**
 2. **N4 bias field correction**
-3. **Linear registration** to a reference atlas using either:
-   - **FSL FLIRT**, or
-   - **ANTsPy** (Affine transform)
+3. **Linear registration** to a reference atlas using **FSL FLIRT**
 
 The pipeline is designed for batch processing of `.nii.gz` T1-weighted MRI scans and can run on CPU or GPU (for HD-BET).
 
@@ -35,7 +33,6 @@ FSLDIR is set and $FSLDIR/bin is in your PATH
 
 The required Python packages are listed in requirements.txt and include:
 - nibabel
-- antspyx
 - torch
 - numpy
 - HD-BET
@@ -55,7 +52,6 @@ The main entry point of the pipeline is `main.py`
 --atlas        Fixed image for registration (e.g., MNI152 template) (required)
 --atlas_mask   Brain mask of the fixed image (required)
 
---reg_tool     Registration tool to use: FSL or ANTs (default: FSL)
 --use_mask     Use brain masks during registration
 --cleanup      Remove temporary files after processing
 --device       Device to use for HD-BET: cuda or cpu (default: cuda)
@@ -82,7 +78,7 @@ This is the recommended way to run the pipeline on HPC systems.
 ```
 apptainer build mri_preproc.sif container/recipe.def
 ```
-⚠️ Note: The resulting image is large (approximately 13 GB) due to CUDA, FSL, and neuroimaging dependencies.
+⚠️ Note: image was optimized to ~9Gb (compared to 13Gb of the precious release)
 
 ### Run the container
 ```
@@ -97,11 +93,14 @@ apptainer run --nv \
         --reg_tool FSL \
         --device cuda
 ```
+### Public image
+A built image is provided on Github Container Registry under: `ghcr.io/kakou34/sbmp-bigr:v2.0`
+
 
 # Final Remarks 
 - This repository represents a stable working release of a brain preprocessing pipeline.
-- Future versions may focus on reducing container size and simplifying dependencies.
+- Compared to release v1.0, we aimed to optimize the size of the container by removing ANTsPy (thus restricting the registation to FSL) and improving the Apptainer recipe.
 - For reproducibility, users are encouraged to use tagged releases
-- If you use this code in your research, please cite this repo and the relevant tools (HD-BET, FSL, ANTs).
+- If you use this code in your research, please cite this repo and the relevant tools (HD-BET, FSL).
 
 

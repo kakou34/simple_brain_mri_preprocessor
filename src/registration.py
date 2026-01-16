@@ -1,56 +1,5 @@
-import ants
 import os
 import subprocess
-
-def run_ants_registration(fixed_path, fixed_mask_path, moving_path, moving_mask_path, use_mask=False):
-    """
-    Performs mask-guided registration using ANTs.
-    """
-    # 1. Load images as ANTs objects
-    fixed_img = ants.image_read(fixed_path)
-    moving_img = ants.image_read(moving_path)
-    
-    fixed_mask = ants.image_read(fixed_mask_path)
-    moving_mask = ants.image_read(moving_mask_path)
-
-    moving_img = ants.iMath(moving_img, "Normalize")
-
-    fixed_img = ants.iMath(fixed_img, "Normalize")
-
-    # 2. Perform Registration
-    # 'QuickRigid' or 'TRNA' (Translation, Rigid, Native, Affine) are good for MNI
-    print(f"Running ANTs registration for {os.path.basename(moving_path)}...")
-    
-    if use_mask:
-        reg_results = ants.registration(
-            fixed=fixed_img,
-            moving=moving_img,
-            type_of_transform="Affine",  # Rigid + Affine
-            mask=fixed_mask,           # Guiding the metric on the atlas
-            moving_mask=moving_mask,   # Guiding the metric on the subject
-            verbose=True
-        )
-    else:
-        reg_results = ants.registration(
-            fixed=fixed_img,
-            moving=moving_img,
-            type_of_transform="Affine",  # Rigid + Affine
-            verbose=True
-        )
-
-    # 3. Apply the transform to the moving mask
-    # We need the mask in atlas space for skull-stripping
-    reg_mask = ants.apply_transforms(
-        fixed=fixed_img,
-        moving=moving_mask,
-        transformlist=reg_results['fwdtransforms'],
-        interpolator='nearestNeighbor' # Masks must use nearest neighbor
-    )
-
-    reg_image = reg_results['warpedmovout']
-
-    return reg_image, reg_mask
-
 
 def run_fsl_registration(moving_path, moving_mask_path, fixed_path, fixed_mask_path, output_path, output_mask_path, use_mask=False):
     """
@@ -118,6 +67,7 @@ def run_fsl_registration(moving_path, moving_mask_path, fixed_path, fixed_mask_p
     # Cleanup temporary reoriented files
     os.remove(tmp_moving)
     os.remove(tmp_mask)
+    os.remove(matrix_path)
     
     return output_path, output_mask_path
 
