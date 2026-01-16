@@ -78,7 +78,7 @@ This is the recommended way to run the pipeline on HPC systems.
 ```
 apptainer build mri_preproc.sif container/recipe.def
 ```
-⚠️ Note: image was optimized to ~9Gb (compared to 13Gb of the precious release)
+⚠️ Note: the Apptainer image was optimized to ~9Gb (compared to 13Gb of the previous release v1.0)
 
 ### Run the container
 ```
