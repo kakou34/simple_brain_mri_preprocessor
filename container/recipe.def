@@ -1,9 +1,7 @@
 Bootstrap: docker
-From: pytorch/pytorch:2.0.1-cuda11.7-cudnn8-runtime
+From: nvidia/cuda:11.7.1-cudnn8-runtime-ubuntu22.04
 
 %setup
-# This copies your current local directory (the repo) into the container's temporary filesystem
-# It ensures src/ and main.py are included in the build
 cp -r . ${APPTAINER_ROOTFS}/opt/mri_tool
 
 %post
@@ -13,24 +11,56 @@ apt-get update
 apt-get install -y python3-pip git wget bc dc libgl1-mesa-glx libglu1-mesa libxt6 libx11-6 libquadmath0 libgomp1 cmake g++
 
 wget https://fsl.fmrib.ox.ac.uk/fsldownloads/fslinstaller.py
-/opt/conda/bin/python fslinstaller.py -d /opt/fsl --no_checksum -q
+python3 fslinstaller.py -d /opt/fsl --no_checksum -q
 
-/opt/conda/bin/python -m pip install --upgrade pip
-/opt/conda/bin/python -m pip install --no-cache-dir nibabel numpy antspyx
-/opt/conda/bin/python -m pip install --no-cache-dir git+https://github.com/MIC-DKFZ/HD-BET.git
+# 3. Aggressive FSL Pruning
+# Removing these brings the FSL folder from ~10GB down to ~800MB
+rm -rf /opt/fsl/pkgs
+rm -rf /opt/fsl/conda-meta
+rm -rf /opt/fsl/envs
+rm -rf /opt/fsl/include
+rm -rf /opt/fsl/man
+rm -rf /opt/fsl/info
+rm -rf /opt/fsl/share/doc
+rm -rf /opt/fsl/fonts
+rm -rf /opt/fsl/tcl
+rm -rf /opt/fsl/python
+rm -rf /opt/fsl/ssl
+rm -rf /opt/fsl/var
+rm -rf /opt/fsl/sbin
+rm -rf /opt/fsl/data/melodic
+rm -rf /opt/fsl/data/possum
+rm -rf /opt/fsl/data/bedpostx*
+rm -rf /opt/fsl/data/dti*
+rm -rf /opt/fsl/doc
+rm -rf /opt/fsl/data/atlases
+rm -rf /opt/fsl/data/first
+rm -rf /opt/fsl/src
+rm -rf /opt/fsl/bin/fslview*
 
-chmod -R 755 /opt/mri_tool
+# 4. Install Python libraries
+python3 -m pip install --upgrade pip
+python3 -m pip install --no-cache-dir \
+    nibabel numpy SimpleITK \
+    torch --extra-index-url https://download.pytorch.org/whl/cu117
+
+python3 -m pip install --no-cache-dir git+https://github.com/MIC-DKFZ/HD-BET.git
+
+# 5. Final Cleanup
+apt remove -y gcc g++ make cmake pkg-config python3-dev build-essential
+apt remove *-dev
+apt-get purge -y git wget
+apt-get autoremove -y
+apt-get clean
+rm -rf /var/lib/apt/lists/* /root/.cache/pip fslinstaller.py
 
 %environment
-# FSL Environment
 export FSLDIR=/opt/fsl
-export PATH=$FSLDIR/bin:/opt/conda/bin:$PATH
+export PATH=$FSLDIR/bin:$PATH
 export FSLOUTPUTTYPE=NIFTI_GZ
-export LD_LIBRARY_PATH=$FSLDIR/lib:$LD_LIBRARY_PATH
+# Point to where FSL keeps its shared libraries
+export LD_LIBRARY_PATH=$FSLDIR/lib:$FSLDIR/bin:$LD_LIBRARY_PATH
 export PYTHONPATH=/opt/mri_tool:$PYTHONPATH
 
-
 %runscript
-# This is the command that runs by default when you call 'apptainer run'
-# It points to the INTERNAL code location
-exec /opt/conda/bin/python /opt/mri_tool/main.py "$@"
+exec python3 /opt/mri_tool/main.py "$@"
